@@ -1,6 +1,6 @@
 # Porkbun MCP Server Installation Guide
 
-This guide is specifically designed for AI agents like Cline to install and configure the Porkbun MCP server for use with LLM applications like Claude Desktop, Cursor, Roo Code, and Cline.
+This guide is specifically designed for AI agents like Cline to install and configure the Porkbun MCP server for use with LLM applications like Claude Desktop, Claude Code, Cursor, Cline, Kiro, Roo Code, and Windsurf.
 
 ## Overview
 
@@ -48,348 +48,512 @@ Before installation, you need:
         You will then need to provide the path to this file in the MCP configuration (see below). **Do not commit this file to Git.**
 
 5.  **Configure MCP Settings:**
-    Add the Porkbun MCP server configuration to your MCP settings file based on your LLM client:
+    Add the Porkbun MCP server configuration to your MCP settings file based on your LLM client.
+    
+    **Important Notes:**
+    - Each client has different configuration formats and features
+    - Some clients support both local (STDIO) and remote (SSE/HTTP) servers
+    - Environment variables handling varies by client
+    - Always use absolute paths for file references
 
     #### Configuration File Locations
 
-    *   Cline (VS Code Extension): `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
-    *   Roo Code (VS Code Extension): `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json`
-    *   Claude Desktop: `~/Library/Application Support/Claude/claude_desktop_config.json`
-    *   Cursor: `[project root]/.cursor/mcp.json`
+    **Claude Desktop:**
+    - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+    - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+    - Access via: Claude Desktop → Settings → Developer → Edit Config
 
-    Add or merge this configuration into your chosen client's settings file. **Crucially, update the `"/path/to/porkbun-mcp-server"` placeholder to the actual absolute path where you cloned the repository.**
+    **Claude Code:**
+    - Project scope: `.mcp.json` in project root
+    - User scope: Managed by `claude mcp add` command
+    - Local scope: Project-specific user settings (not shared)
 
-    ```json
-    {
-      "mcpServers": {
-        "porkbun-server": {
-          // --- Option 1: Using Environment Variables for API Keys ---
-          "command": "node",
-          "args": [
-            "/path/to/porkbun-mcp-server/build/index.js" // <-- IMPORTANT: Update this path
-          ],
-          // --- Option 2: Using a .env file for API Keys ---
-          // "command": "node",
-          // "args": [
-          //   "/path/to/porkbun-mcp-server/build/index.js", // <-- IMPORTANT: Update this path
-          //   "--dotenv-path",
-          //   "/path/to/your/.env" // <-- IMPORTANT: Update this path
-          // ],
-          // --- Common Settings ---
-          "cwd": "/path/to/porkbun-mcp-server", // <-- IMPORTANT: Update this path
-          "disabled": false,
-          "autoApprove": [] // Add specific tool names here if you want to auto-approve them
-        }
+    **Cursor:**
+    - Project-specific: `.cursor/mcp.json` in project root
+    - Global: `~/.cursor/mcp.json` in home directory
+    - Access via: Command Palette → "cursor settings" → MCP section
+
+    **Cline (VS Code Extension):**
+    - macOS: `~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+    - Windows: `%APPDATA%\Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json`
+    - Linux: `~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+    - Access via: Cline's "MCP Servers" icon in top navigation
+
+    **Roo Code (VS Code Extension):**
+    - Global: Same path as Cline but with `rooveterinaryinc.roo-cline` instead of `saoudrizwan.claude-dev`
+    - Project: `.roo/mcp.json` in project root
+    - Access via: Roo Code settings icon → "Edit Global MCP"
+
+    **Kiro:**
+    - Workspace: `.kiro/settings/mcp.json` (project-specific)
+    - User: `~/.kiro/settings/mcp.json` (global)
+    - Access via: Kiro panel → Edit button next to MCP
+
+    Add or merge this configuration into your chosen client's settings file. **Each client has a slightly different format - see client-specific examples below.**
+
+## Client-Specific Configuration Examples
+
+### Claude Desktop Configuration
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "porkbun-server": {
+      "command": "node",
+      "args": [
+        "/path/to/porkbun-mcp-server/build/index.js"
+      ],
+      "env": {
+        "PORKBUN_API_KEY": "YOUR_API_KEY",
+        "PORKBUN_SECRET_API_KEY": "YOUR_SECRET_API_KEY"
       }
     }
-    ```
-    *Choose either Option 1 or Option 2 for the `command` and `args` based on how you configured API keys.*
-    *Make sure the `cwd` (Current Working Directory) also points to the correct absolute path of the project.*
-
-## Available MCP Tools
-
-Once configured, you'll have access to these Porkbun tools:
-
-### 1. `ping_porkbun`
-Tests the Porkbun API connection and authentication.
-**Parameters:** None
-**Example:**
-```json
-{}
-```
-
-### 2. `get_domain_pricing`
-Retrieves the default domain pricing information for all supported TLDs. (Does not require authentication).
-**Parameters:** None
-**Example:**
-```json
-{}
-```
-
-### 3. `list_domains`
-Retrieves a list of domains in the Porkbun account.
-**Parameters:**
-- `start`: (Optional, number) Index to start retrieving domains from (default 0).
-- `includeLabels`: (Optional, enum: "yes") Include domain labels.
-**Example:**
-```json
-{
-  "start": 0,
-  "includeLabels": "yes"
+  }
 }
 ```
 
-### 4. `get_dns_records`
-Retrieves DNS records for a domain. If `record_id` is provided, retrieves a single record; otherwise, retrieves all records.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `record_id`: (Optional, string) The ID of a specific record to retrieve.
-**Example (All Records):**
+**Note:** Claude Desktop only supports local STDIO servers. Environment variables must be defined in the config file.
+
+### Cursor Configuration
+
+Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
+
 ```json
 {
-  "domain": "example.com"
-}
-```
-**Example (Single Record):**
-```json
-{
-  "domain": "example.com",
-  "record_id": "123456789"
+  "mcpServers": {
+    "porkbun-server": {
+      "command": "node",
+      "args": [
+        "/path/to/porkbun-mcp-server/build/index.js"
+      ],
+      "env": {
+        "PORKBUN_API_KEY": "YOUR_API_KEY",
+        "PORKBUN_SECRET_API_KEY": "YOUR_SECRET_API_KEY"
+      }
+    }
+  }
 }
 ```
 
-### 5. `create_dns_record`
-Adds a new DNS record to a specified domain.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `name`: (Optional, string) Subdomain (leave blank for root, `*` for wildcard).
-- `type`: (Required, string) Record type (A, CNAME, MX, etc.).
-- `content`: (Required, string) Record content/answer.
-- `ttl`: (Optional, number, default: 600) Time To Live in seconds (min 600).
-- `prio`: (Optional, number) Priority (for MX/SRV records).
-**Example:**
+**Note:** Cursor supports both STDIO and SSE transports. Maximum 40 tools can be active simultaneously.
+
+### Cline Configuration
+
+Add to `cline_mcp_settings.json`:
+
 ```json
 {
-  "domain": "example.com",
-  "name": "www",
-  "type": "A",
-  "content": "192.0.2.1",
-  "ttl": 600
+  "mcpServers": {
+    "porkbun-server": {
+      "command": "node",
+      "args": [
+        "/path/to/porkbun-mcp-server/build/index.js"
+      ],
+      "env": {
+        "PORKBUN_API_KEY": "YOUR_API_KEY",
+        "PORKBUN_SECRET_API_KEY": "YOUR_SECRET_API_KEY"
+      },
+      "alwaysAllow": ["ping_porkbun", "list_domains", "get_dns_records"],
+      "disabled": false
+    }
+  }
 }
 ```
 
-### 6. `edit_dns_record`
-Modifies an existing DNS record using its ID.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `record_id`: (Required, string) The ID of the record to edit.
-- `name`: (Optional, string) New subdomain.
-- `type`: (Required, string) New record type.
-- `content`: (Required, string) New record content.
-- `ttl`: (Optional, number, default: 600) New TTL.
-- `prio`: (Optional, number) New Priority.
-**Example:**
+**Note:** Use `alwaysAllow` to auto-approve specific tools. Start with read-only tools for safety.
+
+### Roo Code Configuration
+
+Add to global settings or `.roo/mcp.json` (project):
+
 ```json
 {
-  "domain": "example.com",
-  "record_id": "123456789",
-  "type": "A",
-  "content": "192.0.2.2",
-  "ttl": 1200
+  "mcpServers": {
+    "porkbun-server": {
+      "command": "node",
+      "args": [
+        "/path/to/porkbun-mcp-server/build/index.js"
+      ],
+      "type": "stdio",
+      "env": {
+        "PORKBUN_API_KEY": "YOUR_API_KEY",
+        "PORKBUN_SECRET_API_KEY": "YOUR_SECRET_API_KEY"
+      },
+      "alwaysAllow": ["ping_porkbun"],
+      "disabled": false
+    }
+  }
 }
 ```
 
-### 7. `delete_dns_record`
-Removes a specific DNS record using its ID.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `record_id`: (Required, string) The ID of the record to delete.
-**Example:**
+**Note:** Roo Code supports creating new MCP servers on request and offers three operation modes.
+
+### Kiro Configuration
+
+Add to `.kiro/settings/mcp.json` (workspace) or `~/.kiro/settings/mcp.json` (user):
+
 ```json
 {
-  "domain": "example.com",
-  "record_id": "123456789"
+  "mcpServers": {
+    "porkbun-server": {
+      "command": "node",
+      "args": [
+        "/path/to/porkbun-mcp-server/build/index.js"
+      ],
+      "env": {
+        "PORKBUN_API_KEY": "YOUR_API_KEY",
+        "PORKBUN_SECRET_API_KEY": "YOUR_SECRET_API_KEY"
+      },
+      "disabled": false,
+      "autoApprove": ["ping_porkbun", "list_domains"]
+    }
+  }
 }
 ```
 
-### 8. `get_ssl_bundle`
-Retrieves the SSL certificate bundle (certificate chain, private key, public key) for a specified domain.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-**Example:**
+**Note:** Use `autoApprove` for trusted tools. Set `chmod 600` on config files for security.
+
+## Alternative: Using .env Files
+
+Instead of putting API keys directly in configuration files, you can use a `.env` file:
+
+1. **Create `.env` file** in a secure location (e.g., `~/.config/porkbun-mcp/.env`):
+   ```dotenv
+   PORKBUN_API_KEY=YOUR_API_KEY_HERE
+   PORKBUN_SECRET_API_KEY=YOUR_SECRET_API_KEY_HERE
+   ```
+
+2. **Update configuration** to use `--dotenv-path`:
+   ```json
+   {
+     "mcpServers": {
+       "porkbun-server": {
+         "command": "node",
+         "args": [
+           "/path/to/porkbun-mcp-server/build/index.js",
+           "--dotenv-path",
+           "/path/to/.env"
+         ]
+       }
+     }
+   }
+   ```
+
+**Security Best Practices:**
+- Never commit `.env` files to version control
+- Set restrictive permissions: `chmod 600 ~/.config/porkbun-mcp/.env`
+- Store `.env` files outside project directories
+- Use separate API keys with minimal permissions for MCP
+
+### Claude Code Specific Configuration
+
+Claude Code provides a powerful CLI interface for MCP server management with three configuration scopes:
+
+- **Local scope** (default): Project-specific user settings (not shared)
+- **Project scope**: Stored in `.mcp.json` (shared via version control)  
+- **User scope**: Global configuration across all projects
+
+#### Option 1: CLI Method (Recommended)
+
+1. **Local Scope** (default - private to current project):
+   ```bash
+   # With environment variables
+   claude mcp add porkbun-server node /path/to/porkbun-mcp-server/build/index.js
+   
+   # With .env file
+   claude mcp add porkbun-server node /path/to/porkbun-mcp-server/build/index.js --dotenv-path /path/to/.env
+   ```
+
+2. **User Scope** (available across all projects):
+   ```bash
+   # With environment variables
+   claude mcp add porkbun-server -s user node /path/to/porkbun-mcp-server/build/index.js
+   
+   # With .env file
+   claude mcp add porkbun-server -s user node /path/to/porkbun-mcp-server/build/index.js --dotenv-path /path/to/.env
+   ```
+
+3. **Project Scope** (shared with team via `.mcp.json` in project root):
+   ```bash
+   # With environment variables
+   claude mcp add porkbun-server -s project node /path/to/porkbun-mcp-server/build/index.js
+   
+   # With .env file
+   claude mcp add porkbun-server -s project node /path/to/porkbun-mcp-server/build/index.js --dotenv-path /path/to/.env
+   ```
+
+**Important:** Make sure to set the `PORKBUN_API_KEY` and `PORKBUN_SECRET_API_KEY` environment variables in your shell before running Claude Code, or use the `--dotenv-path` option.
+
+#### Option 2: Manual JSON Configuration
+
+Create or edit `.mcp.json` in your project root:
+
 ```json
 {
-  "domain": "example.com"
+  "mcpServers": {
+    "porkbun-server": {
+      "command": "node",
+      "args": [
+        "/path/to/porkbun-mcp-server/build/index.js"
+        // Add "--dotenv-path", "/path/to/.env" if using .env file
+      ],
+      "env": {
+        // Optional: Set API keys directly here (not recommended for shared projects)
+        // "PORKBUN_API_KEY": "YOUR_API_KEY",
+        // "PORKBUN_SECRET_API_KEY": "YOUR_SECRET_API_KEY"
+      }
+    }
+  }
 }
 ```
 
-### 9. `update_nameservers`
-Updates the nameservers for a specified domain.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `ns`: (Required, array of strings) An array of name servers.
-**Example:**
-```json
-{
-  "domain": "example.com",
-  "ns": ["ns1.example-dns.com", "ns2.example-dns.com"]
-}
-```
+#### Managing Claude Code MCP Servers
 
-### 10. `get_nameservers`
-Gets the authoritative nameservers for a specified domain.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-**Example:**
-```json
-{
-  "domain": "example.com"
-}
-```
+- **List installed servers:** `claude mcp list`
+- **Get server details:** `claude mcp get porkbun-server`
+- **Remove a server:** `claude mcp remove porkbun-server`
+- **Import from Claude Desktop:** `claude mcp add-from-claude-desktop`
+- **Add from JSON:** `claude mcp add-json`
+- **Reset project choices:** `claude mcp reset-project-choices`
 
-### 11. `add_url_forward`
-Adds URL forwarding for a domain or subdomain.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `subdomain`: (Optional, string, default: "") Subdomain to forward (leave blank for root).
-- `location`: (Required, string) URL to forward to.
-- `type`: (Required, enum: "temporary", "permanent") Type of forward.
-- `includePath`: (Optional, enum: "yes", "no", default: "no") Include URI path in redirection.
-- `wildcard`: (Optional, enum: "yes", "no", default: "no") Also forward all subdomains.
-**Example:**
-```json
-{
-  "domain": "example.com",
-  "subdomain": "blog",
-  "location": "https://my-other-site.com/blog",
-  "type": "permanent",
-  "includePath": "yes"
-}
-```
+**Environment Variable Support:**
+- Direct substitution: `${VAR}`
+- With default fallback: `${VAR:-default_value}`
+- Can be set via system environment, `-e` flag, or in `.mcp.json`
 
-### 12. `get_url_forwarding`
-Gets URL forwarding records for a domain.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-**Example:**
-```json
-{
-  "domain": "example.com"
-}
-```
+### Kiro Specific Configuration
 
-### 13. `delete_url_forward`
-Deletes a URL forward record for a domain by its ID.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `forward_id`: (Required, string) The ID of the URL forward record to delete.
-**Example:**
-```json
-{
-  "domain": "example.com",
-  "forward_id": "987654321"
-}
-```
+Kiro supports MCP servers through JSON configuration files with workspace and user-level settings.
 
-### 14. `check_domain`
-Checks the availability of a domain name.
-**Parameters:**
-- `domain`: (Required, string) The domain name to check.
-**Example:**
-```json
-{
-  "domain": "new-awesome-domain.com"
-}
-```
+#### Prerequisites
 
-### 15. `edit_dns_record_by_name_type`
-Edits all DNS records matching a domain, subdomain (optional), and type.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `type`: (Required, string) The type of records to edit (A, MX, etc.).
-- `name`: (Optional, string) The subdomain to edit (blank for root, `*` for wildcard).
-- `content`: (Required, string) The new answer content.
-- `ttl`: (Optional, number, default: 600) New TTL.
-- `prio`: (Optional, number) New Priority.
-**Example:**
-```json
-{
-  "domain": "example.com",
-  "type": "MX",
-  "name": "",
-  "content": "mail.newprovider.com",
-  "prio": 10
-}
-```
+1. Ensure you have the latest version of Kiro installed
+2. Enable MCP support:
+   - Click the Kiro Ghost icon in the activity bar
+   - Enable MCPs in the panel
+   - Click the edit button (pencil icon) next to MCP
 
-### 16. `delete_dns_record_by_name_type`
-Deletes all DNS records matching a domain, subdomain (optional), and type.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `type`: (Required, string) The type of records to delete.
-- `name`: (Optional, string) The subdomain to delete (blank for root, `*` for wildcard).
-**Example:**
-```json
-{
-  "domain": "example.com",
-  "type": "TXT",
-  "name": "_acme-challenge"
-}
-```
+#### Configuration Steps
 
-### 17. `retrieve_dns_record_by_name_type`
-Retrieves all DNS records matching a domain, subdomain (optional), and type.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `type`: (Required, string) The type of records to retrieve.
-- `name`: (Optional, string) The subdomain to retrieve (blank for root, `*` for wildcard).
-**Example:**
-```json
-{
-  "domain": "example.com",
-  "type": "A",
-  "name": "www"
-}
-```
+1. **Open the MCP configuration file:**
+   - **Via Command Palette:** Press Cmd+Shift+P (Mac) or Ctrl+Shift+P (Windows/Linux)
+     - Select "MCP: Open User Configuration" for global settings
+     - Or edit `.kiro/settings/mcp.json` directly for workspace settings
+   - **Via Kiro Panel:** Click the edit button next to MCP in the Kiro panel
 
-### 18. `create_dnssec_record`
-Creates a DNSSEC record at the registry for the domain.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `keyTag`: (Required, string) Key Tag.
-- `alg`: (Required, string) DS Data Algorithm.
-- `digestType`: (Required, string) Digest Type.
-- `digest`: (Required, string) Digest.
-- `maxSigLife`: (Optional, string) Max Sig Life.
-- `keyDataFlags`: (Optional, string) Key Data Flags.
-- `keyDataProtocol`: (Optional, string) Key Data Protocol.
-- `keyDataAlgo`: (Optional, string) Key Data Algorithm.
-- `keyDataPubKey`: (Optional, string) Key Data Public Key.
-**Example:**
-```json
-{
-  "domain": "example.com",
-  "keyTag": "12345",
-  "alg": "8",
-  "digestType": "2",
-  "digest": "E2D3C916F6DEEAC73294E8268FB5885044A833CFFA5769A47825E6C4D33C25"
-}
-```
+2. **Add the Porkbun server configuration:**
+   
+   For workspace-level configuration (`.kiro/settings/mcp.json`):
+   ```json
+   {
+     "mcpServers": {
+       "porkbun-server": {
+         "command": "node",
+         "args": [
+           "/path/to/porkbun-mcp-server/build/index.js"
+         ],
+         "env": {
+           "PORKBUN_API_KEY": "YOUR_API_KEY_HERE",
+           "PORKBUN_SECRET_API_KEY": "YOUR_SECRET_API_KEY_HERE"
+         },
+         "disabled": false,
+         "autoApprove": []
+       }
+     }
+   }
+   ```
 
-### 19. `get_dnssec_records`
-Gets the DNSSEC records associated with the domain at the registry.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-**Example:**
-```json
-{
-  "domain": "example.com"
-}
-```
+   **Alternative with .env file:**
+   ```json
+   {
+     "mcpServers": {
+       "porkbun-server": {
+         "command": "node",
+         "args": [
+           "/path/to/porkbun-mcp-server/build/index.js",
+           "--dotenv-path",
+           "/path/to/your/.env"
+         ],
+         "disabled": false,
+         "autoApprove": []
+       }
+     }
+   }
+   ```
 
-### 20. `delete_dnssec_record`
-Deletes a DNSSEC record associated with the domain at the registry by Key Tag.
-**Parameters:**
-- `domain`: (Required, string) The domain name.
-- `keyTag`: (Required, string) The Key Tag of the DNSSEC record to delete.
-**Example:**
-```json
-{
-  "domain": "example.com",
-  "keyTag": "12345"
-}
-```
+3. **Save the configuration file** and Kiro will automatically load the MCP server
+
+#### Kiro MCP Troubleshooting
+
+- View server status in the MCP servers tab
+- Test tools by clicking them in the interface
+- Reference tools in prompts with `#tool_name`
+- Check logs in the Output panel
+- Ensure JSON syntax is valid
+- Use absolute paths only
+- Set file permissions: `chmod 600` on config files for security
+- Never commit mcp.json files containing sensitive tokens
+
+### Windsurf Specific Configuration
+
+Windsurf supports MCP servers through its Cascade AI assistant. Follow these steps:
+
+#### Prerequisites
+
+1. Ensure you have the latest version of Windsurf installed
+2. Enable MCP support in Windsurf:
+   - Launch Windsurf and click the "Windsurf - Settings" button (bottom right)
+   - Or use Cmd+Shift+P (Mac) / Ctrl+Shift+P (Windows/Linux) and type "Open Windsurf Settings"
+   - Scroll to the "Cascade" section in Advanced Settings
+   - Find the Model Context Protocol (MCP) option and enable it
+   - Restart Windsurf if prompted
+
+#### Configuration File Location
+
+The MCP configuration file for Windsurf is located at:
+- **All platforms:** `~/.codeium/windsurf/mcp_config.json`
+
+#### Configuration Steps
+
+1. **Create or edit the MCP configuration file:**
+   
+   **Option 1: Using the UI**
+   - In the Cascade > MCP Servers panel, click on "Add Custom Server +"
+   - Or click on the Hammer Icon on the Cascade Tool bar, then click "Configure"
+
+   **Option 2: Manual configuration**
+   - Create/edit the file at `~/.codeium/windsurf/mcp_config.json`
+
+2. **Add the Porkbun server configuration:**
+   
+   **With environment variables:**
+   ```json
+   {
+     "mcpServers": {
+       "porkbun-server": {
+         "command": "node",
+         "args": [
+           "/path/to/porkbun-mcp-server/build/index.js"
+         ]
+       }
+     }
+   }
+   ```
+
+   **With .env file:**
+   ```json
+   {
+     "mcpServers": {
+       "porkbun-server": {
+         "command": "node",
+         "args": [
+           "/path/to/porkbun-mcp-server/build/index.js",
+           "--dotenv-path",
+           "/path/to/your/.env"
+         ]
+       }
+     }
+   }
+   ```
+
+   **With API keys in configuration (not recommended for security):**
+   ```json
+   {
+     "mcpServers": {
+       "porkbun-server": {
+         "command": "node",
+         "args": [
+           "/path/to/porkbun-mcp-server/build/index.js"
+         ],
+         "env": {
+           "PORKBUN_API_KEY": "YOUR_API_KEY_HERE",
+           "PORKBUN_SECRET_API_KEY": "YOUR_SECRET_API_KEY_HERE"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Save the configuration file** and restart Windsurf
+
+#### Windsurf MCP Features
+
+- Windsurf's Cascade AI assistant can interact with multiple MCP servers simultaneously
+- Supports both stdio and SSE (Server-Sent Events) communication protocols
+- Pre-populated server templates available for popular services
+- Windsurf limits how many tools within servers can be active at any moment
+
+#### Windsurf MCP Troubleshooting
+
+- If the server doesn't appear, click the refresh button in the top right corner of the MCP server section
+- Check logs at `~/.codeium/windsurf/logs` for debugging information
+- Ensure all paths use forward slashes (`/`), even on Windows
+- Verify the Node.js executable is in your system PATH
+
+#### Additional Resources
+
+- Browse community MCP servers at:
+  - https://opentools.com/
+  - https://github.com/modelcontextprotocol/servers
+  - https://windsurf.run/
+- For more details, check the [Windsurf MCP Documentation](https://docs.windsurf.com/)
+
+## Available Tools
+
+**Domain Management:**
+- `ping_porkbun` - Test API connection
+- `list_domains` - List all domains (params: `start`, `includeLabels`)
+- `check_domain` - Check availability (params: `domain`)
+- `get_domain_pricing` - Get TLD pricing
+
+**DNS Records:**
+- `get_dns_records` - Get all/specific records (params: `domain`, `record_id`)
+- `create_dns_record` - Add record (params: `domain`, `name`, `type`, `content`, `ttl`, `prio`)
+- `edit_dns_record` - Edit by ID (params: `domain`, `record_id`, `type`, `content`, `ttl`, `prio`)
+- `delete_dns_record` - Delete by ID (params: `domain`, `record_id`)
+- `edit_dns_record_by_name_type` - Edit all matching records
+- `delete_dns_record_by_name_type` - Delete all matching records
+- `retrieve_dns_record_by_name_type` - Get matching records
+
+**Other Services:**
+- `get_ssl_bundle` - Get SSL certificates (params: `domain`)
+- `get_nameservers` / `update_nameservers` - Manage nameservers
+- `add_url_forward` / `get_url_forwarding` / `delete_url_forward` - URL forwarding
+- `create_dnssec_record` / `get_dnssec_records` / `delete_dnssec_record` - DNSSEC management
+
+**Common Parameters:**
+- `domain`: Always required
+- `name`: Subdomain (blank for root, `*` for wildcard)
+- `type`: DNS record type (A, CNAME, MX, TXT, etc.)
+- `content`: Record value/answer
+- `ttl`: Time to live (default: 600)
+- `prio`: Priority (for MX/SRV)
 
 ## Verify Installation
 
 To verify the installation is working:
 
-1.  Restart your LLM application (Cline, Claude Desktop, etc.) after updating the MCP settings.
-2.  Test the connection by asking the AI to use the `ping_porkbun` tool:
+1.  **Restart/Reload your LLM application:**
+    - **Claude Desktop:** Restart the app after editing config
+    - **Claude Code:** Servers start automatically after `claude mcp add`
+    - **Cursor:** Servers reload on config save
+    - **Cline:** Auto-installs after saving settings
+    - **Roo Code:** Auto-restarts on config changes
+    - **Kiro:** Loads automatically on save
+
+2.  **Test the connection:**
     ```
     Please test the Porkbun API connection using the ping_porkbun tool.
     ```
-    You should see a success message with your IP address if the configuration and API keys are correct.
+    You should see a success message with your IP address if configured correctly.
+
+3.  **Client-specific verification:**
+    - **Claude Code:** Run `claude mcp list` to see active servers
+    - **Cursor:** Check Command Palette → "cursor settings" → MCP section
+    - **Cline/Roo Code:** Check server status in MCP UI panel
+    - **Kiro:** View MCP servers tab for connection status
 
 ## Usage Examples
 
@@ -424,27 +588,113 @@ Check if my-new-idea.net is available using Porkbun.
 ### Common Issues and Solutions
 
 1.  **MCP server connection issues:**
-    *   Verify the `command`, `args`, and `cwd` paths in your MCP settings file are correct absolute paths.
-    *   Ensure the server code was built successfully (`bun run build`).
-    *   Check if Node.js is correctly installed and accessible.
-    *   Confirm no other MCP servers are conflicting on the same name (`porkbun-server`).
+    *   Verify absolute paths in configuration (no relative paths)
+    *   Ensure server was built: `bun run build`
+    *   Check Node.js installation: `node --version`
+    *   Verify server name uniqueness
+    *   **Client-specific checks:**
+        - Claude Desktop: Must restart app after config changes
+        - Cursor: Check if MCP is enabled in settings
+        - Cline/Roo Code: Look for errors in MCP UI panel
+        - Kiro: Check MCP servers tab for connection status
 
-2.  **Authentication Errors (e.g., in `ping_porkbun`):**
-    *   Double-check that your `PORKBUN_API_KEY` and `PORKBUN_SECRET_API_KEY` are correct.
-    *   If using environment variables, ensure they are set in the environment where the MCP server process is launched by your LLM client.
-    *   If using a `.env` file, verify the path in the MCP `args` is correct and the file content is accurate.
-    *   Ensure the API keys are enabled in your Porkbun account settings.
+2.  **Authentication Errors:**
+    *   Verify API keys are correct and enabled in Porkbun account
+    *   **Environment variable issues by client:**
+        - Claude Desktop: Must be in `"env"` section of config
+        - Claude Code: Use `-e` flag or system environment
+        - Cursor/Cline/Roo/Kiro: Set in `"env"` section
+    *   If using `.env` file:
+        - Verify file exists at specified path
+        - Check file permissions (readable by your user)
+        - Ensure correct format: `KEY=value` (no quotes needed)
 
 3.  **Tool Execution Errors:**
-    *   Check the specific error message returned by the tool.
-    *   Verify the parameters provided match the required schema (e.g., correct domain name, valid record ID).
-    *   Ensure the action is permitted by Porkbun's API (e.g., trying to delete a non-existent record).
+    *   Check error message for specific details
+    *   Verify required parameters are provided
+    *   Ensure domain exists in your Porkbun account
+    *   Check API rate limits
 
-4.  **JSON parsing errors in configuration:**
-    *   Make sure your MCP settings file is valid JSON.
-    *   Ensure all paths use forward slashes (`/`), even on Windows.
-    *   Check for missing commas, extra commas, or mismatched brackets.
+4.  **Configuration Issues:**
+    *   **JSON syntax errors:**
+        - Use a JSON validator
+        - Common issues: trailing commas, unmatched brackets
+        - Windows paths: escape backslashes or use forward slashes
+    *   **Client-specific formats:**
+        - Claude Code: Supports SSE/HTTP transport types
+        - Cursor: Requires `"mcpServers"` wrapper
+        - Cline/Roo: Supports `alwaysAllow` for auto-approval
+        - Kiro: Supports `autoApprove` array
 
-## Additional Information
+5.  **Platform-specific issues:**
+    *   **Windows:**
+        - Use `cmd` as command with `/c` flag for npx
+        - Example: `"command": "cmd", "args": ["/c", "node", "path/to/server"]`
+    *   **Permission errors:**
+        - Ensure read/write access to config directories
+        - MCP servers run with your user permissions
 
-For more details on the specific API endpoints used by these tools, refer to the [Porkbun API Documentation](https://porkbun.com/api/json/v3/documentation).
+## Quick Reference
+
+### File Locations by Client
+
+| Client | Configuration File | Platform |
+|--------|-------------------|----------|
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` | macOS |
+| Claude Desktop | `%APPDATA%\Claude\claude_desktop_config.json` | Windows |
+| Claude Code | `.mcp.json` (project) or via `claude mcp add` | All |
+| Cursor | `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global) | All |
+| Cline | `~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` | macOS/Linux |
+| Cline | `%APPDATA%\Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json` | Windows |
+| Roo Code | Same as Cline but `rooveterinaryinc.roo-cline` or `.roo/mcp.json` | All |
+| Kiro | `.kiro/settings/mcp.json` (workspace) or `~/.kiro/settings/mcp.json` (user) | All |
+
+### Key Features by Client
+
+| Feature | Claude Desktop | Claude Code | Cursor | Cline | Roo Code | Kiro |
+|---------|---------------|-------------|---------|--------|-----------|-------|
+| STDIO Support | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| SSE/HTTP Support | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Auto-approve Tools | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ |
+| CLI Management | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| Project Config | ✗ | ✓ | ✓ | ✗ | ✓ | ✓ |
+| Environment Variables | Config only | Flexible | Config | Config | Config | Config |
+
+
+## Official MCP Documentation Links
+
+**⚠️ IMPORTANT: IF YOU ARE HAVING TROUBLE WITH INSTALLATION, PLEASE REFER TO THE OFFICIAL DOCUMENTATION BELOW FOR YOUR SPECIFIC CLIENT ⚠️**
+
+Each client has its own unique MCP implementation. The official documentation contains the most up-to-date installation instructions, troubleshooting guides, and configuration details specific to your client.
+
+**Claude Desktop**
+- MCP Docs: https://modelcontextprotocol.io/quickstart/user
+
+**Claude Code**
+- MCP Docs: https://docs.anthropic.com/en/docs/claude-code/mcp
+
+**Cursor**
+- MCP Docs: https://docs.cursor.com/context/mcp
+
+**Cline**
+- MCP Docs: https://docs.cline.bot/mcp/configuring-mcp-servers
+
+**Roo Code**
+- MCP Docs: https://docs.roocode.com/features/mcp/overview/
+- MCP Configuration: https://docs.roocode.com/features/mcp/using-mcp-in-roo/
+
+**Kiro**
+- Main Docs: https://kiro.dev/docs/mcp/
+
+**Windsurf**
+- MCP Docs: https://docs.windsurf.com/windsurf/cascade/mcp
+
+**General MCP Resources**
+- MCP Protocol Documentation: https://modelcontextprotocol.io/
+- Protocol specification: https://spec.modelcontextprotocol.io/
+- GitHub organization: https://github.com/modelcontextprotocol
+- Official servers: https://github.com/modelcontextprotocol/servers
+
+
+**Porkbun API Documentation**
+- API Docs: https://porkbun.com/api/json/v3/documentation
