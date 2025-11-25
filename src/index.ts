@@ -101,9 +101,6 @@ async function porkbunRequest(
 const server = new McpServer({
   name: "porkbun-server",
   version: "1.0.0",
-  capabilities: {
-    tools: {}, // Enable tools capability
-  },
 });
 
 // --- Tool Definitions ---
