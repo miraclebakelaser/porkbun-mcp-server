@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/miraclebakelaser-porkbun-mcp-server-badge.png)](https://mseep.ai/app/miraclebakelaser-porkbun-mcp-server)
+
 # Porkbun MCP Server
 
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-blue)](https://modelcontextprotocol.io)
